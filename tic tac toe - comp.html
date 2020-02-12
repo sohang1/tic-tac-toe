@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tic Tac Toe Against Computer</title>
+<link rel="stylesheet" type="text/css" href="J:\Programming\Web\Styles\styles.css" />
+</head>
+<body class="game">
+<h1>Tic Tac Toe</h1>
+<p>Welcome to the exciting two-player game of Tic Tac Toe. Challenge your friends and keep score, and show them how 
+good you are! Enjoy!</p>
+<h3 style="color:red;">Rules</h3>
+<p>The rules are simple: Both players take alternate turns and click on a box to put their respective signs ('X' or 'O'). The 
+one who forms a line first in any direction - vertical, horizontal or slant - wins the game. If all boxes are filled and no line is
+formed, the game is draw.</p>
+<p>If you want to <a href="tic tac toe - human.html">play against a friend</a>, click 
+<a href="tic tac toe - human.html">here</a>.</p>
+<p>So now for play time!</p>
+<button onclick="startGame()">Play</button><br />
+<input type="radio" name="play" value="O"  /> Play first<br />
+<input type="radio" name="play" value="X" /> Play second<br /><br />
+<!--this is where the play field is created by javascript-->
+<table hidden></table>
+<noscript>Please enable javascript in your browser as this game works with javascript.</noscript>
+<!--this is where the score is shown-->
+<pre></pre><br />
+<p><a href="javascript:localStorage.setItem('score', ''); location.reload();">Clear previous score</a></p>
+<a href="javascript:location.reload()">New game</a>
+<script src="J:\Programming\Web\Scripts\random.js"></script>
+<script src="Scripts\tic tac toe.js"></script>
+<script>
+var score = JSON.parse(localStorage.getItem('score') || '{"won":0, "lost":0, "draw":0}'),
+      user, comp, canMove, cells;
+var COMP_RESPONSE_DELAY = 300; 				//milliseconds
+
+//check the saved value in the radio button, else the first player
+document.querySelector('input[value=' + (localStorage.getItem('playFirst') || 'O') + ']').checked = true;
+//print score
+document.querySelector('pre').innerHTML = '<strong>Score:</strong> won:- ' + score.won + '     lost:- ' + score.lost + '    draw:- ' + score.draw;
+
+function canCreateFork(turn, a) {
+	var i, j, k, move, b = clone(a = a || board), opts = range(a.length).filter(function(i) {return a[i] == ' '}), forks = [], f;
+	//console.log('new');
+	//console.log(opts);
+	for (i in opts) {
+		b[i = opts[i]] = turn; //console.log(i);
+		f = []; //console.log(b);
+		for (j in winMoves) {
+			move = winMoves[j].map(function(i) {return b[i - 1]; }); //console.log(move);
+			if ((k = move.indexOf(' ')) > -1 && move.filter(function(x) {return x == turn; }).length == 2) {
+				f.push(winMoves[j][k] - 1);
+			}
+		} if (f.length > 1) {
+			forks.push([i, f.length]);
+		} b[i] = a[i]; //console.log(forks);
+	} f = forks.map(function(f) {return f[1]; }); //console.log(f);
+	return f.length ? forks[f.indexOf(Math.max.apply(Math, f))][0] : -1;	
+}
+
+function startGame() {
+	table.hidden = false;
+	//store selected value in radio button
+	localStorage.setItem('playFirst', user = document.querySelector('input[name=play]:checked').value);
+	comp = (canMove = user == 'O') ? 'X' : 'O';
+	if (!canMove) {
+		//wait for 300 milliseconds, then randomly choose a cell with odd position
+		setTimeout(function() {
+			main(randFrom(cells.filter(function(cell, i) {return i % 2 == 0; })), comp); 
+			canMove = true; 
+		}, 300);
+	}
+}
+
+function makeMove(e, turn) {
+	var i = cells.indexOf(e); 
+	if (board[i] == ' ') {
+		e.innerHTML = board[i] = turn;
+	}
+}
+
+//detect almost filled lines
+function checkForLineCompletion(v) {
+	var i, j, move;
+	for (i in winMoves) {
+		//get values from board using indexes specified in winMove[i]
+		move = winMoves[i].map(val);
+		//if line has two occurances of v and one empty space
+		if ((j = move.indexOf(' ')) > -1 && move.filter(function(x) {return x == v; }).length == 2) { 
+			return winMoves[i][j] - 1;
+		}
+	} 
+	return -1;
+}
+
+//check for the triangle trick
+function checkForChoice() {
+	return val(5) == comp && (val(1) == user && val(9) == user) || (val(3) == user && val(7) == user);
+}
+
+function main(e, turn) {
+	makeMove(e, turn);
+	var winner = checkWinner(), msg;
+	//game over
+	if (winner || !board.filter(function(v) {return v == ' '; }).length) {
+		//won
+		if (winner == user) {
+			msg = 'CONGRATULATIONS!\nYOU WON THE GAME';
+			score.won++;
+		//lost
+		} else if (winner == comp) {
+			msg = 'BAD LUCK!\nYOU LOST';
+			score.lost++;
+		//draw
+		} else {
+			msg = 'GAME DRAW';
+			score.draw++;
+		} 
+	} 
+	if (msg) {
+		localStorage.setItem('score', JSON.stringify(score));
+		return msg + '\nScore:  won:- ' + score.won + '    lost:- ' + score.lost + '    draw:- ' + score.draw;
+	}
+}
+
+function play(e) {
+	if (canMove) {
+		e.style.border = '3px solid blue';
+		//msg is user's move
+		var msg = main(e, user), i;
+		var options = cells.filter(function(cell) {return cell.innerHTML == '&nbsp;' }), opts, b;
+		//if game over
+		if (msg) {
+			alert(msg);
+			location.reload();
+		//define computer move
+		} else {
+			canMove = false;
+			
+			//computer responds after delay
+			setTimeout(function() {
+				//if its line can be completed, else if user's is going to be 
+				if ((i = checkForLineCompletion(comp)) > -1 || (i = checkForLineCompletion(user)) > -1) {
+					msg = main(cells[r = i], comp); 
+				//check for triangle trick
+				} else if (checkForChoice()) {
+					msg = main(r = randFrom(options), comp);
+				//if boxes with odd indexes are available, choose one at random
+				} else if (val(5) == ' ') {
+					msg = main(cells[4], comp);
+				} else if ((opts = options.filter(function(cell) {return cells.indexOf(cell) % 2 == 0; })).length) {
+					msg = main(randFrom(opts), comp); 
+				//choose an available box at random
+				} else {
+					msg = main(randFrom(options), comp); 
+				} 
+				//if game over
+				if (msg) {
+					//setTimeout is necessary, otherwise alert comes before winning move is highlighted
+					setTimeout(function() {
+						alert(msg);
+						location.reload();
+					}, 10);
+				} canMove = true;
+			}, COMP_RESPONSE_DELAY);
+		}
+	}
+}
+</script>
+</body>
+</html>

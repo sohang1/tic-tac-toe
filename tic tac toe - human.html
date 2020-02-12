@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tic Tac Toe Against Human</title>
+<link rel="stylesheet" type="text/css" href="J:\Programming\Web\Styles\styles.css" />
+</head>
+<body class="game">
+<h1>Tic Tac Toe</h1>
+<p>Welcome to the exciting two-player game of Tic Tac Toe. Challenge your friends and keep score, and show them how 
+good you are! Enjoy!</p>
+<h3 style="color:red;">Rules</h3>
+<p>The rules are simple: Both players take alternate turns and click on a box to put their respective signs ('X' or 'O'). The 
+one who forms a line first in any direction - vertical, horizontal or slant - wins the game. If all boxes are filled and no line is
+formed, the game is draw.</p>
+<p>If you want to <a href="tic tac toe - comp.html">play against the computer</a>, click 
+<a href="tic tac toe - comp.html">here</a>.</p>
+<p><strong>Note:</strong> By default, the first player is O. But you can change this by clicking the button below.</p>
+<p><button onclick="changeFirstPlayer()">Change first player</button></p>
+<p><button onclick="localStorage.setItem('scoreX', 0); localStorage.setItem('scoreO', 0); location.reload();">Clear previous score</button></p>
+<p>So now for play time!</p><br />
+<table></table>
+<noscript>Please enable javascript in your browser as this game works with javascript.</noscript>
+<p id="status"></p>
+<pre></pre>
+<a href="javascript:location.reload()">New game</a>
+<script src="Scripts\tic tac toe.js"></script>
+<script>
+'use strict';
+var p = document.querySelector('#status'),
+      score = {X:localStorage.getItem('scoreX') || 0, O:localStorage.getItem('scoreO') || 0},
+      turn = localStorage.getItem('firstPlayer') || 'O';
+
+//create board
+table.innerHTML = ('<tr>' + '<td onmousedown="play(this)" onmouseup="this.style.border = \'\'">&nbsp;</td>'.repeat(3) + '</tr>').repeat(3);
+//get all boxes
+var cells = [].slice.call(table.getElementsByTagName('TD'));
+showStatus(turn);
+//show previous score
+document.querySelector('pre').innerHTML = '<strong>Score:</strong> X :- ' + score.X + '                   O :- ' + score.O;
+
+function changeFirstPlayer() {	
+	var firstPlayer = localStorage.getItem('firstPlayer');
+	localStorage.setItem('firstPlayer',  firstPlayer == 'O' ? 'X' : 'O');
+	//if board is empty
+	if (board.indexOf('X') == -1 && board.indexOf('O') == -1) {
+		turn = firstPlayer;
+	}
+}
+
+//show turns
+function showStatus(v) {
+	p.innerHTML = 'It is your turn, ' + v;
+}
+
+function makeMove(e) {
+	var i = cells.indexOf(e); 
+	if (board[i] == ' ') {
+		e.innerHTML = board[i] = turn;
+		showStatus(turn = turn == 'O' ? 'X' : 'O');
+	}
+}
+
+function play(e) {
+	e.style.border = '3px solid blue';
+	makeMove(e);
+	var winner = checkWinner(), show;
+	//game over
+	if (winner || board.filter(function(v) {return v == ' '; }).length == 1) {
+		//declare winner
+		if (winner) {
+			score[winner]++;
+			show = 'WINNER IS:  ' + winner;
+		//draw
+		} else {
+			show = 'GAME DRAW';
+		}
+		
+		//show winner (or draw) and score
+		//setTimeout is necessary because otherwise the alert box shows before
+		//the winning move is highlighted
+		setTimeout(function() {
+			alert(show + '\nScore: X :- ' + score.X + '             O :- ' + score.O);
+		}, 10);
+		localStorage.setItem('scoreX', score.X);
+		localStorage.setItem('scoreO', score.O);
+		//location.reload();
+	}
+}
+</script>
+</body>
+</html>
